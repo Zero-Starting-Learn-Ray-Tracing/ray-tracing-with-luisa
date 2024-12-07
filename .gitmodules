@@ -1,0 +1,7 @@
+[submodule "thirdparty/LuisaCompute"]
+	path = thirdparty/LuisaCompute
+	url = git@github.com:xiaomx32/LuisaCompute.git
+	branch = next
+[submodule "thirdparty/cxxopts"]
+	path = thirdparty/cxxopts
+	url = git@github.com:jarro2783/cxxopts.git
