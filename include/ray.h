@@ -1,13 +1,17 @@
 #pragma once
 
 #include "rtweekend.h"
-#include <utility>
 
 
 class ray {
 public:
+    Float3 orig {};
+    Float3 dir {};
+    Float tm {};
+
+public:
     ray() = default;
-    ray(Float3 origin, Float3 direction, Float  time = 0.0f)
+    ray(Float3 origin, Float3 direction, Float time = 0.0f)
         : orig(std::move(origin))
         , dir(std::move(direction))
         , tm(std::move(time))
@@ -32,9 +36,4 @@ public:
     Float3 at(Float t) const {
         return orig + t * dir;
     }
-
-public:
-    Float3 orig {};
-    Float3 dir {};
-    Float tm {};
 };

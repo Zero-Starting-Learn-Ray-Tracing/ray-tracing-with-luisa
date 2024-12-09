@@ -39,7 +39,10 @@ Float3 ray_color(
 );
 
 [[nodiscard]]
-cxxopts::ParseResult parse_cli_options(int argc, const char *const *argv) noexcept;
+cxxopts::ParseResult parse_cli_options(
+    int argc,
+    const char *const *argv
+) noexcept;
 
 } // namespace anonymous end
 
@@ -56,108 +59,116 @@ int main(int argc, char *argv[]) {
 
     // Image
     float aspect_ratio = 16.0f / 9.0f;
-    uint image_width = 1920.0f;
-    uint samples_per_pixel = 500.0f;
+    uint image_width = 1920;
+    std::size_t samples_per_pixel = options["samples"].as<std::size_t>();
     uint max_depth = MAX_DEPTH;
 
     // World
     hittable_list world;
 
-    float3 lookfrom;
-    float3 lookat;
-    float vfov = 40.0f;
-    float aperture = 0.0f;
-    float3 background(0.0f, 0.0f, 0.0f);
+    float3 lookfrom {};
+    float3 lookat {};
+    float vfov { 40.0f };
+    float aperture { 0.0f };
+    float3 background { 0.0f, 0.0f, 0.0f };
 
     // select scene
-    switch (2) {
-        case 1:
+    switch (options["scene"].as<int>()) {
+        case 1: {
             world = random_scene();
-            background = float3(0.70f, 0.80f, 1.00f);
-            lookfrom = float3(13.0f, 2.0f, 3.0f);
-            lookat = float3(0.0f, 0.0f, 0.0f);
+            background = float3 { 0.70f, 0.80f, 1.00f };
+            lookfrom = float3 { 13.0f, 2.0f, 3.0f };
+            lookat = float3 { 0.0f, 0.0f, 0.0f };
             vfov = 20.0f;
             aperture = 0.1f;
             break;
-
-        case 2:
+        }
+        case 2: {
             world = two_spheres();
-            background = float3(0.70, 0.80, 1.00);
-            lookfrom = float3(13, 2, 3);
-            lookat = float3(0, 0, 0);
+            background = float3 { 0.70f, 0.80f, 1.00f };
+            lookfrom = float3 { 13.0f, 2.0f, 3.0f };
+            lookat = float3 { 0.0f, 0.0f, 0.0f };
             vfov = 20.0f;
             break;
-
-        case 3:
+        }
+        case 3: {
             world = two_perlin_spheres(device, stream);
             background = float3(0.70f, 0.80f, 1.00f);
             lookfrom = float3(13.0f, 2.0f, 3.0f);
             lookat = float3(0.0f, 0.0f, 0.0f);
             vfov = 20.0f;
             break;
-
-        case 4:
+        }
+        case 4: {
             world = earth(device, stream);
             background = float3(0.70f, 0.80f, 1.00f);
             lookfrom = float3(13.0f, 2.0f, 3.0f);
             lookat = float3(0.0f, 0.0f, 0.0f);
             vfov = 20.0f;
             break;
-
-        case 5:
+        }
+        case 5: {
             world = simple_light(device, stream);
-            samples_per_pixel = 400;
+            // samples_per_pixel = 400;
             background = float3(0, 0, 0);
             lookfrom = float3(26, 3, 6);
             lookat = float3(0, 2, 0);
             vfov = 20.0f;
             break;
-
-        case 6:
+        }
+        case 6: {
             world = cornell_box();
             aspect_ratio = 1.0f;
-            image_width = 600.0f;
-            samples_per_pixel = 200;
+            image_width = 600;
+            // samples_per_pixel = 200;
             background = float3(0, 0, 0);
             lookfrom = float3(278, 278, -800);
             lookat = float3(278, 278, 0);
             vfov = 40.0f;
             break;
-
-        case 7:
+        }
+        case 7: {
             world = cornell_smoke();
             aspect_ratio = 1.0f;
-            image_width = 600.0f;
-            samples_per_pixel = 200;
+            image_width = 600;
             lookfrom = float3(278, 278, -800);
             lookat = float3(278, 278, 0);
             vfov = 40.0f;
             break;
-
-        default:
-        case 8:
+        }
+        case 8: {
             world = final_scene(device, stream);
             aspect_ratio = 1.0f;
-            image_width = 800.0f;
-            samples_per_pixel = 10000;
+            image_width = 800;
             background = float3(0, 0, 0);
             lookfrom = float3(478, 278, -600);
             lookat = float3(278, 278, 0);
             vfov = 40.0f;
             break;
+        }
+        default: {}
     }
 
     // Camera
-    float3 vup(0.0f, 1.0f, 0.0f);
-    float dist_to_focus = 10.0f;
-
-    camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
+    float3 vup { 0.0f, 1.0f, 0.0f };
+    float dist_to_focus { 10.0f };
+    camera cam(
+        lookfrom,
+        lookat,
+        vup,
+        vfov,
+        aspect_ratio,
+        aperture,
+        dist_to_focus,
+        0.0f,
+        1.0f
+    );
 
     // Render
     uint image_height = static_cast<uint>(static_cast<float>(image_width) / aspect_ratio);
     uint2 resolution = make_uint2(image_width, image_height);
-    Image<uint> seed_image = device.create_image<uint>(PixelStorage::INT1, resolution);
-    Image<float> accum_image = device.create_image<float>(PixelStorage::FLOAT4, resolution);
+    Image<uint> seed_image = device.create_image<uint>(PixelStorage::INT1, resolution, 1u, false, false);
+    Image<float> accum_image = device.create_image<float>(PixelStorage::FLOAT4, resolution, 1u, false, false);
     luisa::vector<std::byte> host_image(accum_image.view().size_bytes());
 
     Kernel2D render_kernel = [&](
@@ -168,8 +179,14 @@ int main(int argc, char *argv[]) {
         UInt2 coord = dispatch_id().xy();
         UInt2 size = dispatch_size().xy();
         $if (sample_index == 0u) {
-            seed_image.write(coord, make_uint4(tea(coord.x, coord.y)));
-            accum_image.write(coord, make_float4(make_float3(0.0f), 1.0f));
+            seed_image.write(
+                coord,
+                make_uint4(tea(coord.x, coord.y))
+            );
+            accum_image.write(
+                coord,
+                make_float4(make_float3(0.0f), 1.0f)
+            );
         };
 
         UInt seed = seed_image.read(coord).x;
@@ -185,16 +202,22 @@ int main(int argc, char *argv[]) {
             pixel_color,
             1.0f / (cast<Float>(sample_index) + 1.0f)
         );
-        accum_image.write(coord, make_float4(accum_color, 1.0f));
-        seed_image.write(coord, make_uint4(seed));
+        accum_image.write(
+            coord,
+            make_float4(accum_color, 1.0f)
+        );
+        seed_image.write(
+            coord,
+            make_uint4(seed)
+        );
     };
 
     auto render = device.compile(render_kernel);
 
     Clock clk;
-    for (uint sample_index = 0u; sample_index < samples_per_pixel; sample_index++) {
+    for (std::size_t sample_index = 0; sample_index < samples_per_pixel; ++sample_index) {
         stream << render(seed_image, accum_image, sample_index).dispatch(resolution)
-            << [sample_index, samples_per_pixel, &clk] {
+            << [sample_index, samples_per_pixel, &clk] () {
                 LUISA_INFO(
                     "Samples: {} / {} ({:.1f}s)",
                     sample_index + 1u,
@@ -207,7 +230,10 @@ int main(int argc, char *argv[]) {
     // Gamma Correct
     Kernel2D gamma_kernel = [&](ImageFloat accum_image, ImageFloat output) {
         UInt2 coord = dispatch_id().xy();
-        output.write(coord, make_float4(sqrt(accum_image.read(coord).xyz()), 1.0f));
+        output.write(
+            coord,
+            make_float4(sqrt(accum_image.read(coord).xyz()), 1.0f)
+        );
     };
 
     auto gamma_correct = device.compile(gamma_kernel);
@@ -216,7 +242,7 @@ int main(int argc, char *argv[]) {
     stream << gamma_correct(accum_image, output_image).dispatch(resolution);
     stream << output_image.copy_to(host_image.data()) << synchronize();
     stbi_write_png(
-        "test_rt_weekend.png",
+        (options["outfile"].as<luisa::string>() + ".png").c_str(),
         static_cast<int>(resolution.x),
         static_cast<int>(resolution.y),
         4,
@@ -299,10 +325,25 @@ hittable_list random_scene() {
 hittable_list two_spheres() {
     hittable_list objects;
 
-    auto checker = make_shared<checker_texture>(float3(0.2, 0.3, 0.1), float3(0.9, 0.9, 0.9));
+    auto checker = luisa::make_shared<checker_texture>(
+        float3 { 0.2f, 0.3f, 0.1f },
+        float3 { 0.9f, 0.9f, 0.9f }
+    );
 
-    objects.add(make_shared<sphere>(float3(0, -10, 0), 10, make_shared<lambertian>(checker)));
-    objects.add(make_shared<sphere>(float3(0, 10, 0), 10, make_shared<lambertian>(checker)));
+    objects.add(
+        luisa::make_shared<sphere>(
+            float3(0.0f, -10.0f, 0.0f),
+            10.0f,
+            luisa::make_shared<lambertian>(checker)
+        )
+    );
+    objects.add(
+        luisa::make_shared<sphere>(
+            float3 { 0.0f, 10.0f, 0.0f },
+            10.0f,
+            luisa::make_shared<lambertian>(checker)
+        )
+    );
 
     return objects;
 }
@@ -528,13 +569,35 @@ Float3 ray_color(
     return ret;
 };
 
-cxxopts::ParseResult parse_cli_options(int argc, const char *const *argv) noexcept {
+cxxopts::ParseResult parse_cli_options(
+    int argc,
+    const char *const *argv
+) noexcept {
     cxxopts::Options cli {
         "RayTracing",
         "ray tracing with luisa compute"
     };
     cli.add_option("", "h", "help", "Display this help message", cxxopts::value<bool>()->default_value("false"), "");
     cli.add_option("", "b", "backend", "Compute backend name", cxxopts::value<luisa::string>(), "<backend>");
+    cli.add_option("", "s", "samples", "Samples per pixel", cxxopts::value<std::size_t>()->default_value("100"), "<numbers>");
+    cli.add_option(
+        "",
+        "i",
+        "scene",
+        R"(scene id,
+        1: random scene;
+        2: two_spheres;
+        3: two_perlin_shperes;
+        4: earth;
+        5: simple_light;
+        6: cornell_box;
+        7: cornell_smoke;
+        8: final_scene
+        )",
+        cxxopts::value<int>()->default_value("1"),
+        "<scene_id>"
+    );
+    cli.add_option("", "o", "outfile", "output image file name", cxxopts::value<luisa::string>()->default_value("./test"), "<image_name>");
 
     const cxxopts::ParseResult options = [&] {
         try {

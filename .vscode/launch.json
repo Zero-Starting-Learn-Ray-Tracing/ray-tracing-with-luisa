@@ -10,7 +10,9 @@
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/build/buildDebug/bin/RayTracing",
-            "args": ["--backend=cuda"],
+            "args": [
+                "--backend=cuda --samples=50 --scene=8 --outfile=./test"
+            ],
         },
         {
             "name": "lldb-dap",
@@ -18,7 +20,9 @@
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/build/buildDebug/bin/RayTracing",
-            "args": ["--backend=cuda"],
+            "args": [
+                "--backend=cuda --samples=50 --scene=8 --outfile=./test"
+            ],
         }
     ]
 }

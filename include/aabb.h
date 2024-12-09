@@ -5,7 +5,12 @@
 
 class aabb {
 public:
+    float3 minimum {};
+    float3 maximum {};
+
+public:
     aabb() = default;
+
     aabb(const float3 &a, const float3 &b)
         : minimum { a }
         , maximum { b }
@@ -29,17 +34,16 @@ public:
     ) const {
         Bool ret { true };
 
-        for (std::size_t a = 0; a < 3; ++a) {
+        for (std::size_t i = 0; i < 3; ++i) {
             $if (ret) {
-                auto invD = 1.0f / r.direction()[a];
-                auto t0 = (def(min()[a]) - r.origin()[a]) * invD;
-                auto t1 = (def(max()[a]) - r.origin()[a]) * invD;
+                auto invD = 1.0f / r.direction()[i];
+                auto t0 = (def(min()[i]) - r.origin()[i]) * invD;
+                auto t1 = (def(max()[i]) - r.origin()[i]) * invD;
                 $if (invD < 0.0f) {
                     auto tmp = t0;
                     t0 = t1;
                     t1 = tmp;
                 };
-
                 t_min = luisa::compute::max(t0, t_min);
                 t_max = luisa::compute::min(t1, t_max);
                 $if (t_max <= t_min) {
@@ -50,9 +54,6 @@ public:
 
         return ret;
     }
-
-    float3 minimum;
-    float3 maximum;
 };
 
 aabb surrounding_box(aabb box0, aabb box1) {

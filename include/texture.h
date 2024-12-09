@@ -15,6 +15,9 @@ public:
 
 class solid_color : public texture {
 public:
+    float3 color_value {};
+
+public:
     solid_color() = default;
 
     explicit solid_color(float3 c)
@@ -26,16 +29,17 @@ public:
     {}
 
     [[nodiscard]]
-    virtual Float3 value(Float u, Float v, const Float3 &p) const override {
+    Float3 value(Float u, Float v, const Float3 &p) const override {
         return color_value;
     }
-
-private:
-    float3 color_value {};
 };
 
 
 class checker_texture : public texture {
+public:
+    luisa::shared_ptr<texture> odd;
+    luisa::shared_ptr<texture> even;
+
 public:
     checker_texture() = default;
 
@@ -48,12 +52,12 @@ public:
     {}
 
     checker_texture(float3 c1, float3 c2)
-        : even(make_shared<solid_color>(c1))
-        , odd(make_shared<solid_color>(c2))
+        : even(luisa::make_shared<solid_color>(c1))
+        , odd(luisa::make_shared<solid_color>(c2))
     {}
 
     [[nodiscard]]
-    virtual Float3 value(Float u, Float v, const Float3 &p) const override {
+    Float3 value(Float u, Float v, const Float3 &p) const override {
         Float3 ret {};
 
         auto sines = sin(10.0f * p.x) * sin(10.0f * p.y) * sin(10.0f * p.z);
@@ -65,14 +69,14 @@ public:
 
         return ret;
     }
-
-public:
-    luisa::shared_ptr<texture> odd;
-    luisa::shared_ptr<texture> even;
 };
 
 
 class noise_texture : public texture {
+public:
+    perlin noise;
+    float scale {};
+
 public:
     noise_texture(Device &d, Stream &s)
         : noise(perlin(d, s))
@@ -85,22 +89,24 @@ public:
     {}
 
     [[nodiscard]]
-    virtual Float3 value(Float u, Float v, const Float3 &p) const override {
+    Float3 value(Float u, Float v, const Float3 &p) const override {
         return 0.5f * Float3(1.0f, 1.0f, 1.0f) * (
             1.0f + sin(scale * p.z + 10.0f * noise.turb(p))
         );
     }
-
-public:
-    perlin noise;
-    float scale {};
 };
 
 
 class image_texture : public texture {
 public:
+    unsigned char *data { nullptr };
+    int width {};
+    int height {};
+    int bytes_per_scanline {};
+    Buffer<int> dataBuf;
     const static int bytes_per_pixel { 4 };
 
+public:
     image_texture()
         : data(nullptr)
         , width(0)
@@ -136,7 +142,7 @@ public:
     }
 
     [[nodiscard]]
-    virtual Float3 value(Float u, Float v, const Float3 &p) const override {
+    Float3 value(Float u, Float v, const Float3 &p) const override {
         // If we have no texture data, then return solid cyan as a debugging aid.
         if (data == nullptr) {
             return { 0.0f, 1.0f, 1.0f };
@@ -165,12 +171,4 @@ public:
             color_scale * cast<Float>(pixel_2)
         };
     }
-
-private:
-    unsigned char *data;
-    int width {};
-    int height {};
-    int bytes_per_scanline {};
-
-    Buffer<int> dataBuf;
 };

@@ -3,37 +3,56 @@
 #include "hittable.h"
 #include "aabb.h"
 
+
 class hittable_list : public hittable {
 public:
-    hittable_list() {}
-    hittable_list(shared_ptr<hittable> object) { add(object); }
+    luisa::vector<luisa::shared_ptr<hittable>> objects;
 
-    void clear() { objects.clear(); }
-    void add(shared_ptr<hittable> object) { objects.push_back(object); }
+public:
+    hittable_list() = default;
 
-    virtual Bool hit(
-        const ray &r, Float t_min, Float t_max, hit_record &rec, UInt &seed) const override;
+    hittable_list(const luisa::shared_ptr<hittable>& object) {
+        add(object);
+    }
 
-    virtual bool bounding_box(
-        aabb &output_box) const override;
+    void clear() {
+        objects.clear();
+    }
+
+    void add(const luisa::shared_ptr<hittable>& object) {
+        objects.push_back(object);
+    }
+
+    Bool hit(
+        const ray &r,
+        Float t_min,
+        Float t_max,
+        hit_record &rec,
+        UInt &seed
+    ) const override;
+
+    bool bounding_box(aabb &output_box) const override;
 
     void shuffle() {
         auto temp = objects[0];
         objects[0] = objects[3];
         objects[3] = temp;
     }
-
-public:
-    vector<shared_ptr<hittable>> objects;
 };
 
-Bool hittable_list::hit(const ray &r, Float t_min, Float t_max, hit_record &rec, UInt &seed) const {
+Bool hittable_list::hit(
+    const ray &r,
+    Float t_min,
+    Float t_max,
+    hit_record &rec,
+    UInt &seed
+) const {
     hit_record temp_rec;
-    Bool hit_anything = false;
-    Float closest_so_far = t_max;
+    Bool hit_anything { false };
+    Float closest_so_far { t_max };
 
-    for (uint i = 0; i < objects.size(); i++) {
-        auto &object = objects[i];
+
+    for (const auto & object : objects) {
         $if (object->hit(r, t_min, closest_so_far, temp_rec, seed)) {
             hit_anything = true;
             closest_so_far = temp_rec.t;
@@ -45,14 +64,20 @@ Bool hittable_list::hit(const ray &r, Float t_min, Float t_max, hit_record &rec,
 }
 
 bool hittable_list::bounding_box(aabb &output_box) const {
-    if (objects.empty()) return false;
+    if (objects.empty()) {
+        return false;
+    }
 
     aabb temp_box;
-    bool first_box = true;
+    bool first_box { true };
 
     for (const auto &object : objects) {
-        if (!object->bounding_box(temp_box)) return false;
-        output_box = first_box ? temp_box : surrounding_box(output_box, temp_box);
+        if (!object->bounding_box(temp_box)) {
+            return false;
+        }
+        output_box = first_box
+            ? temp_box
+            : surrounding_box(output_box, temp_box);
         first_box = false;
     }
 

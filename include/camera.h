@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rtweekend.h"
+#include "ray.h"
 
 class camera {
 public:
@@ -8,20 +9,21 @@ public:
         float3 lookfrom,
         float3 lookat,
         float3 vup,
-        float vfov,// vertical field-of-view in degrees
+        float vfov, // vertical field-of-view in degrees
         float aspect_ratio,
         float aperture,
         float focus_dist,
-        float _time0 = 0,
-        float _time1 = 0) {
-        float theta = radians(vfov);
-        float h = tan(theta / 2);
-        float viewport_height = 2.0 * h;
+        float _time0 = 0.0f,
+        float _time1 = 0.0f
+    ) {
+        float theta = luisa::radians(vfov);
+        float h = luisa::tan(theta / 2.0f);
+        float viewport_height = 2.0f * h;
         float viewport_width = aspect_ratio * viewport_height;
 
-        w = normalize(lookfrom - lookat);
-        u = normalize(cross(vup, w));
-        v = cross(w, u);
+        w = luisa::normalize(lookfrom - lookat);
+        u = luisa::normalize(luisa::cross(vup, w));
+        v = luisa::cross(w, u);
 
         origin = lookfrom;
         horizontal = focus_dist * viewport_width * u;
@@ -37,18 +39,25 @@ public:
         Float3 rd = lens_radius * random_in_unit_disk(seed);
         Float3 offset = u * rd.x + v * rd.y;
 
-        return ray(
+        return {
             origin + offset,
-            lower_left_corner + uv.x * horizontal + uv.y * vertical - origin - offset,
-            frand(seed, time0, time1));
+            lower_left_corner
+                + uv.x * horizontal
+                + uv.y * vertical
+                - origin - offset,
+            frand(seed, time0, time1)
+        };
     }
 
 private:
-    float3 origin;
-    float3 lower_left_corner;
-    float3 horizontal;
-    float3 vertical;
-    float3 u, v, w;
-    float lens_radius;
-    float time0, time1;// shutter open/close times
+    float3 origin {};
+    float3 lower_left_corner {};
+    float3 horizontal {};
+    float3 vertical {};
+    float3 u {};
+    float3 v {};
+    float3 w {};
+    float lens_radius {};
+    float time0 {}; // shutter open/close times
+    float time1 {};
 };
